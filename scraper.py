@@ -72,31 +72,21 @@ class SubredditScraper:
             insert_many_data(config.COMMENTS_COLLECTION, df_comments.to_dicts())
             logger.info(f"Comments saved for post: {post_id}")
 
-            df_posts = pl.concat([df_posts, pl.DataFrame([{
+            # Save post
+            insert_many_data(config.POSTS_COLLECTION, pl.DataFrame([{
                 'post_id': post_id,
                 'author': author,
                 'subreddit': subreddit,
                 'title': title,
                 'permalink': href
-            }])])
-
-            # Add a short break after every 7 posts
-            if count % config.SCRAPE_DELAY == 0:
-                logger.debug(f"Taking a break for {config.SCRAPE_DELAY} seconds")
-
-                # Use opportunity to save posts
-                insert_many_data(config.POSTS_COLLECTION, df_posts.to_dicts())
-                logger.debug(f"Posts saved for subreddit: {subreddit}")
-
-                # Clear the posts dataframe
-                df_posts = df_posts.filter(
-                    pl.col('post_id') == 'not_a_real_id')  # TODO: find a better way to clear the dataframe
-
-                driver.implicitly_wait(config.SCRAPE_DELAY)
+            }]).to_dicts())
+            logger.info(f"Post saved for subreddit: {subreddit}")
 
     @staticmethod
     def extract_comments_data(driver, post_id):
         print(driver.current_url)
+
+        scroll_to_bottom(driver, 1)  # Scroll to bottom to load more comments per post
 
         try:
             comments = WebDriverWait(driver, 5).until(
