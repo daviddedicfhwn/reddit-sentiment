@@ -8,7 +8,6 @@ DRIVER_OPTIONS.set_preference("profile.managed_default_content_settings.images",
 
 # Scraping
 SCROLL_TIME = 10
-SCRAPE_DELAY = 5  # seconds
 SENTIMENT_ANALYSIS = False
 
 # DB

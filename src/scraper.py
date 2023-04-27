@@ -32,12 +32,7 @@ class SubredditScraper:
         post_elements = driver.find_elements(By.XPATH, "//div[@data-testid='post-container']//a[@data-click-id='body']")
         post_hrefs = [element.get_attribute('href') for element in post_elements]
 
-        df_posts = pl.DataFrame(
-            schema=[('post_id', pl.Utf8), ('author', pl.Utf8), ('subreddit', pl.Utf8), ('title', pl.Utf8),
-                    ('permalink', pl.Utf8)])
-
         count = 1
-
         for href in post_hrefs:
             try:
                 driver.get(href)
