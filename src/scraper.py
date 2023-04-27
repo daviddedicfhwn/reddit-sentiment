@@ -15,6 +15,7 @@ class SubredditScraper:
     def __init__(self, driver_options):
         self.driver_options = driver_options
 
+
     def scrape_subreddit(self, subreddit_id):
         with get_driver(self.driver_options) as driver:
             driver.get(self.get_subreddit_url(subreddit_id))
