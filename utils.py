@@ -1,8 +1,12 @@
+import logging
 import time
 from selenium import webdriver
 from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.common.by import By
 from webdriver_manager.firefox import GeckoDriverManager
+
+logger = logging.getLogger(__name__)
+
 
 def get_driver(driver_options):
     """
@@ -12,6 +16,7 @@ def get_driver(driver_options):
     :return: Firefox webdriver instance.
     """
     return webdriver.Firefox(service=Service(GeckoDriverManager().install()), options=driver_options)
+
 
 def handle_cookie_banner(driver):
     """
@@ -23,13 +28,15 @@ def handle_cookie_banner(driver):
         # Find the element by XPATH
         section = driver.find_element(By.XPATH, "//span[contains(., 'Cookies') or contains(., 'Technologien')]")
         parent_element = section.find_element(By.XPATH, "./ancestor::section[2]")
-        button = parent_element.find_element(By.XPATH, ".//button[contains(text(), 'Alle akzeptieren') or contains(text(), 'Accept All')]")
+        button = parent_element.find_element(By.XPATH,
+                                             ".//button[contains(text(), 'Alle akzeptieren') or contains(text(), 'Accept All')]")
         button.click()
 
-        print("Cookie banner handled")
+        logger.debug("Cookie banner handled")
     except Exception as e:
-        print("No cookie banner", str(e))
+        logger.error(f"Error while handling cookie banner: {str(e)}")
         pass
+
 
 def scroll_to_bottom(driver, scroll_time):
     """
@@ -64,7 +71,7 @@ def handle_google_credential(driver):
         # Switch back to the default content
         driver.switch_to.default_content()
 
-        print("Google Credential handled")
+        logger.debug("Google Credential handled")
     except Exception as e:
-        print("No Google Credential popup", str(e))
+        logger.debug("No Google Credential", str(e))
         pass
