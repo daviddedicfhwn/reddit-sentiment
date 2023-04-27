@@ -5,40 +5,36 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 import config
+from database import insert_many_data
 from utils import get_driver, handle_cookie_banner, scroll_to_bottom
 
 logger = logging.getLogger(__name__)
+
 
 class SubredditScraper:
     def __init__(self, driver_options):
         self.driver_options = driver_options
 
-    def scrape_subreddit(self, subreddit_id, sentiment=False):
+    def scrape_subreddit(self, subreddit_id):
         with get_driver(self.driver_options) as driver:
             driver.get(self.get_subreddit_url(subreddit_id))
             WebDriverWait(driver, 10).until(EC.url_matches(r"https://www.reddit.com/r/.*"))
 
             handle_cookie_banner(driver)
+
+            logger.info(f"Scrolling {config.SCROLL_TIME} seconds...")
             scroll_to_bottom(driver, config.SCROLL_TIME)
+            logger.info("Scrolling finished")
 
-            df_posts, df_comments = self.extract_post_data(driver)
-
-            if sentiment:
-                print("Sentiment analysis enabled")
-
-            # todo replace with db
-            print("Saving data")
-            self.save_data_to_csv(df_posts, 'posts.csv')
-            self.save_data_to_csv(df_comments, 'comments.csv')
-            print("Data saved")
+            self.extract_post_data(driver)
 
     def extract_post_data(self, driver):
         post_elements = driver.find_elements(By.XPATH, "//div[@data-testid='post-container']//a[@data-click-id='body']")
         post_hrefs = [element.get_attribute('href') for element in post_elements]
 
-        df_posts = pl.DataFrame(schema=[('post_id', pl.Utf8), ('author', pl.Utf8), ('subreddit', pl.Utf8), ('title', pl.Utf8), ('permalink', pl.Utf8)])
-
-        df_comments = pl.DataFrame(schema={'id': pl.Utf8, 'text': pl.Utf8, 'subreddit': pl.Utf8, 'author': pl.Utf8, 'upvotes': pl.Int64, 'thing_id': pl.Utf8, 'parent_id': pl.Utf8})
+        df_posts = pl.DataFrame(
+            schema=[('post_id', pl.Utf8), ('author', pl.Utf8), ('subreddit', pl.Utf8), ('title', pl.Utf8),
+                    ('permalink', pl.Utf8)])
 
         count = 1
 
@@ -50,8 +46,8 @@ class SubredditScraper:
                 driver.close()
                 continue
 
-            print(f"Post {count} of {len(post_hrefs)}")
-            print(f"URL: {href}")
+            logger.debug(f"Post {count} of {len(post_hrefs)}")
+            logger.debug(f"URL: {href}")
             count += 1
 
             split_url = href.split('/')
@@ -65,12 +61,16 @@ class SubredditScraper:
 
             # Extract the author but add WebDriverWait to ensure it's loaded
             try:
-                WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//a[contains(@class, 'author-name')]")))
+                WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.XPATH, "//a[contains(@class, 'author-name')]")))
                 author = driver.find_element(By.XPATH, "//a[contains(@class, 'author-name')]").text
             except Exception as e:
                 logger.error(f"Error while getting author: {str(e)}")
 
-            df_comments = pl.concat([df_comments, self.extract_comments_data(driver)])
+            # Extract and save comments
+            df_comments = self.extract_comments_data(driver, post_id)
+            insert_many_data(config.COMMENTS_COLLECTION, df_comments.to_dicts())
+            logger.info(f"Comments saved for post: {post_id}")
 
             df_posts = pl.concat([df_posts, pl.DataFrame([{
                 'post_id': post_id,
@@ -79,31 +79,45 @@ class SubredditScraper:
                 'title': title,
                 'permalink': href
             }])])
+
             # Add a short break after every 7 posts
-            if count % 5 == 0:
-                print("Taking a break for 5 seconds")
-                driver.implicitly_wait(2)
+            if count % config.SCRAPE_DELAY == 0:
+                logger.debug(f"Taking a break for {config.SCRAPE_DELAY} seconds")
 
-        return df_posts, df_comments
+                # Use opportunity to save posts
+                insert_many_data(config.POSTS_COLLECTION, df_posts.to_dicts())
+                logger.debug(f"Posts saved for subreddit: {subreddit}")
 
-    def extract_comments_data(self, driver):
+                # Clear the posts dataframe
+                df_posts = df_posts.filter(
+                    pl.col('post_id') == 'not_a_real_id')  # TODO: find a better way to clear the dataframe
 
+                driver.implicitly_wait(config.SCRAPE_DELAY)
+
+    @staticmethod
+    def extract_comments_data(driver, post_id):
         print(driver.current_url)
 
         try:
-            comments = WebDriverWait(driver, 5).until(EC.presence_of_all_elements_located((By.TAG_NAME, "shreddit-comment")))
+            comments = WebDriverWait(driver, 5).until(
+                EC.presence_of_all_elements_located((By.TAG_NAME, "shreddit-comment")))
         except Exception as e:
             logger.error(f"Error while getting comments: {str(e)}")
-            return pl.DataFrame(schema={'id': pl.Utf8, 'text': pl.Utf8, 'subreddit': pl.Utf8, 'author': pl.Utf8, 'upvotes': pl.Int64, 'thing_id': pl.Utf8, 'parent_id': pl.Utf8})
+            return pl.DataFrame(
+                schema={'id': pl.Utf8, 'text': pl.Utf8, 'subreddit': pl.Utf8, 'author': pl.Utf8, 'upvotes': pl.Int64,
+                        'thing_id': pl.Utf8, 'parent_id': pl.Utf8})
 
-        df_comments = pl.DataFrame(schema={'id': pl.Utf8, 'text': pl.Utf8, 'subreddit': pl.Utf8, 'author': pl.Utf8, 'upvotes': pl.Int64, 'thing_id': pl.Utf8, 'parent_id': pl.Utf8})
+        df_comments = pl.DataFrame(
+            schema={'post_id': pl.Utf8, 'text': pl.Utf8, 'subreddit': pl.Utf8, 'author': pl.Utf8, 'upvotes': pl.Int64,
+                    'thing_id': pl.Utf8, 'parent_id': pl.Utf8})
 
         count = 1
 
         for comment in comments:
 
             try:
-                WebDriverWait(comment, 5).until(EC.presence_of_element_located((By.XPATH, ".//div[@id='-post-rtjson-content']/p")))
+                WebDriverWait(comment, 5).until(
+                    EC.presence_of_element_located((By.XPATH, ".//div[@id='-post-rtjson-content']/p")))
             except Exception as e:
                 logger.error(f"Error while getting comment text: {str(e)}")
                 continue
@@ -115,9 +129,6 @@ class SubredditScraper:
                     # Extract the author
                     author = comment.get_attribute("author")
 
-                    # id of post
-                    post_id = comment.get_attribute("postid")
-
                     # id of comment named 'thing' by Reddit
                     thing_id = comment.get_attribute("thingid")
 
@@ -128,7 +139,7 @@ class SubredditScraper:
                         print(f"Parent id: {parent_id}")
 
                     # Extract the upvotes (score)
-                    upvotes = int(comment.get_attribute("score")) if comment.get_attribute("score") else 0
+                    up_votes = int(comment.get_attribute("score")) if comment.get_attribute("score") else 0
 
                     # Extract the permalink and split to get the subreddit
                     permalink = comment.get_attribute("permalink")
@@ -144,20 +155,25 @@ class SubredditScraper:
                     print(f"Thing id: {thing_id}")
                     print('\n')
 
-                    df_comments = pl.concat([df_comments, pl.DataFrame([{'id': post_id, 'text': text, 'subreddit': subreddit, 'author': author, 'upvotes': upvotes, 'thing_id': thing_id, 'parent_id': parent_id}])])
+                    df_comments = pl.concat([df_comments, pl.DataFrame([{'post_id': post_id, 'text': text,
+                                                                         'subreddit': subreddit, 'author': author,
+                                                                         'upvotes': up_votes, 'thing_id': thing_id,
+                                                                         'parent_id': parent_id}])])
                 except Exception as e:
                     logger.error(f"Error while getting comment data: {str(e)}")
                     continue
 
         return df_comments
 
-    def save_data_to_parquet(self, df, file_name):
+    @staticmethod
+    def save_data_to_parquet(df, file_name):
         df.write_parquet(file_name, compression='snappy')
 
-    def save_data_to_csv(self, df, file_name):
+    @staticmethod
+    def save_data_to_csv(df, file_name):
         # save polars to csv in current directory
         df.write_csv(file_name)
 
-
-    def get_subreddit_url(self, subreddit_id):
+    @staticmethod
+    def get_subreddit_url(subreddit_id):
         return f'https://www.reddit.com/r/{subreddit_id}'

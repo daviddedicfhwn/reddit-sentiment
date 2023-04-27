@@ -1,38 +1,31 @@
-from contextlib import contextmanager
-
 from pymongo import MongoClient
 
-# Constants
-MONGODB_URI = "mongodb://localhost:27017/"
-DATABASE_NAME = "my_database"
-COLLECTION_NAME = "my_data"
+from config import DATABASE_NAME, MONGODB_URI
+
+client, db = None, None
 
 
-@contextmanager
-def mongo_connection(uri):
-    client = MongoClient(uri)
-    try:
-        yield client
-    finally:
-        client.close()
+def insert_many_data(collection, data_list):
+    if data_list is None or len(data_list) == 0:
+        return None
 
-
-def insert_data(client, database, collection, data):
-    db = client[database]
-    col = db[collection]
-    result = col.insert_one(data)
-    return result.inserted_id
-
-
-def insert_many_data(client, database, collection, data_list):
-    db = client[database]
     col = db[collection]
     result = col.insert_many(data_list)
     return result.inserted_ids
 
 
-def get_data(client, database, collection, query):
-    db = client[database]
+def get_data(collection, query):
     col = db[collection]
     result = col.find(query)
     return list(result)
+
+
+def connect_to_db():
+    global client, db
+    client = MongoClient(MONGODB_URI)
+    db = client[DATABASE_NAME]
+
+
+def close_db_connection():
+    global client
+    client.close()
