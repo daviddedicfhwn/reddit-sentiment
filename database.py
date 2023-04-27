@@ -20,6 +20,12 @@ def get_data(collection, query):
     return list(result)
 
 
+def update_data_by_id(collection, doc_id, data):
+    # update the data in the database with the new data
+    col = db[collection]
+    col.update_one({'_id': doc_id}, {'$set': data}, upsert=False)
+
+
 def connect_to_db():
     global client, db
     client = MongoClient(MONGODB_URI)
