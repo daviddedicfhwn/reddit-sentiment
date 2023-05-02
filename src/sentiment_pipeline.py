@@ -61,4 +61,4 @@ class SentimentPipeline:
             label = 'NEUTRAL'
             score = 0.5
 
-        return label, score
+        return { 'label': label, 'score': score }

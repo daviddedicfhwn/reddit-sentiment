@@ -19,7 +19,6 @@ def main():
     logger.debug(f"Subreddit list: {subreddit_list}")
 
     scraper = SubredditScraper(config.DRIVER_OPTIONS)
-    sentiment_pipeline = SentimentPipeline()
 
     for subreddit in subreddit_list:
         logger.info(f"Scraping subreddit: {subreddit}")
