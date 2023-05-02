@@ -44,7 +44,7 @@ class SentimentPipeline:
             result = self.pipeline.model(input_ids=input_ids.unsqueeze(0), attention_mask=attention_mask.unsqueeze(0))
 
             # print the result of the sentiment-analysis model and say if the score is positive or negative
-            label = 'POSITIVE' if result[0][0][0] > result[0][0][1] else 'NEGATIVE'
+            label = 'NEGATIVE' if result[0][0][0] > result[0][0][1] else 'POSTIVE'
             score = torch.softmax(result[0], dim=1).max().item()
             results.append((label, score))
 
