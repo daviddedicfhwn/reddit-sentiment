@@ -4,3 +4,4 @@
 geckodriver.log
 .idea/
 scraping.log
+src/__pycache__/
