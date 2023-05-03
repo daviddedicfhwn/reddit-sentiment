@@ -1,8 +1,7 @@
-
+/env
+/__pycache__
+/.vscode
 geckodriver.log
-
 .idea/
-
-__pycache__/
-
 scraping.log
+src/__pycache__/

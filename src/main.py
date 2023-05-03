@@ -1,6 +1,7 @@
 import config
 import database
 from scraper import SubredditScraper
+from sentiment_controller import SentimentController
 
 import logging
 
@@ -23,6 +24,11 @@ def main():
         logger.info(f"Scraping subreddit: {subreddit}")
         scraper.scrape_subreddit(subreddit)
 
+    sentiment_controller = SentimentController(database)
+
+    for collection, field in [(config.POSTS_COLLECTION, 'title'), (config.COMMENTS_COLLECTION, 'text')]:
+        sentiment_controller.write_sentiments_to_documents(collection=collection, field_to_analyze=field)
+    
     database.close_db_connection()
 
 
