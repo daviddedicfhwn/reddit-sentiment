@@ -1,6 +1,7 @@
 from transformers import AutoModelForSequenceClassification
 from transformers import AutoTokenizer, AutoConfig
 import numpy as np
+import config
 from scipy.special import softmax
 
 class SentimentPipeline:
@@ -13,8 +14,8 @@ class SentimentPipeline:
         self.config = AutoConfig.from_pretrained(self.model_path)
         self.model = AutoModelForSequenceClassification.from_pretrained(self.model_path)
 
-    def get_tokenized_sentiment(self, data):
-        text = self.preprocess(data)
+    def get_tokenized_sentiment(self, data, collection=config.COMMENTS_COLLECTION):
+        text = self.preprocess(data, type=collection)
         encoded_input = self.tokenizer(text, return_tensors='pt')
         output = self.model(**encoded_input)
         scores = output[0][0].detach().numpy()
@@ -25,7 +26,10 @@ class SentimentPipeline:
                 'score': np.round(float(scores[ranking[0]]), 4) 
                }
     
-    def preprocess(self, text):
+    def preprocess(self, text, type):
+        if type == config.POSTS_COLLECTION:
+            text.replace("_", " ")
+            
         new_text = []
         for t in text.split(" "):
             t = '@user' if t.startswith('@') and len(t) > 1 else t
