@@ -1,6 +1,6 @@
 from pymongo import MongoClient
 
-from config import DATABASE_NAME, MONGODB_URI
+from src.config import MONGODB_URI, DATABASE_NAME
 
 client, db = None, None
 
@@ -26,10 +26,11 @@ def update_data_by_id(collection, doc_id, data):
     col.update_one({'_id': doc_id}, {'$set': data}, upsert=False)
 
 
-def connect_to_db():
+def connect_to_db(database_name=DATABASE_NAME):
     global client, db
     client = MongoClient(MONGODB_URI)
-    db = client[DATABASE_NAME]
+    db = client[database_name]
+    return client, db
 
 
 def close_db_connection():
