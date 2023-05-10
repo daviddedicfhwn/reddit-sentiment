@@ -1,11 +1,13 @@
 import logging
+
 import polars as pl
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+from tqdm import tqdm
 
 from src import config
-from src.database import insert_many_data
+from src.database import MongoDBClient
 from src.utils import get_driver, handle_cookie_banner, scroll_to_bottom
 
 logger = logging.getLogger(__name__)
@@ -32,11 +34,14 @@ class SubredditScraper:
         post_elements = driver.find_elements(By.XPATH, "//div[@data-testid='post-container']//a[@data-click-id='body']")
         post_hrefs = [element.get_attribute('href') for element in post_elements]
 
+        logger.info(f"Found {len(post_hrefs)} posts")
+
         if max_posts:
+            logger.info(f"Limiting posts to {max_posts}")
             post_hrefs = post_hrefs[:max_posts]
 
         count = 1
-        for href in post_hrefs:
+        for href in tqdm(post_hrefs, desc="Processing posts"):
             try:
                 driver.get(href)
             except Exception as e:
@@ -67,22 +72,20 @@ class SubredditScraper:
 
             # Extract and save comments
             df_comments = self.extract_comments_data(driver, post_id)
-            insert_many_data(config.COMMENTS_COLLECTION, df_comments.to_dicts())
-            logger.info(f"Comments saved for post: {post_id}")
 
-            # Save post
-            insert_many_data(config.POSTS_COLLECTION, pl.DataFrame([{
-                'post_id': post_id,
-                'author': author,
-                'subreddit': subreddit,
-                'title': title,
-                'permalink': href
-            }]).to_dicts())
-            logger.info(f"Post saved for subreddit: {subreddit}")
+            with MongoDBClient() as db_client:
+                db_client.insert_many_data(config.COMMENTS_COLLECTION, df_comments.to_dicts())
+                logger.info(f"Comments saved for post: {post_id}")
+
+                # Save post
+                db_client.insert_many_data(config.POSTS_COLLECTION, pl.DataFrame([
+                    {'post_id': post_id, 'author': author, 'subreddit': subreddit, 'title': title,
+                     'permalink': href}]).to_dicts())
+                logger.info(f"Post saved for subreddit: {subreddit}")
 
     @staticmethod
     def extract_comments_data(driver, post_id):
-        print(driver.current_url)
+        # print(driver.current_url)
 
         scroll_to_bottom(driver, 1)  # Scroll to bottom to load more comments per post
 
@@ -101,7 +104,7 @@ class SubredditScraper:
 
         count = 1
 
-        for comment in comments:
+        for comment in tqdm(comments, desc=f"Processing '{post_id}' comments", leave=False):
 
             try:
                 WebDriverWait(comment, 5).until(
@@ -123,25 +126,24 @@ class SubredditScraper:
                     # check parent id if it exists
                     parent_id = ""
                     if comment.get_attribute("parentid"):
-                        parent_id = comment.get_attribute("parentid")
-                        print(f"Parent id: {parent_id}")
+                        parent_id = comment.get_attribute("parentid")  # print(f"Parent id: {parent_id}")
 
                     # Extract the upvotes (score)
                     up_votes = int(comment.get_attribute("score")) if comment.get_attribute("score") else 0
 
                     # Extract the permalink and split to get the subreddit
                     permalink = comment.get_attribute("permalink")
-                    print(f"Permalink: {permalink}")
+                    # print(f"Permalink: {permalink}")
                     subreddit = permalink.split("/")[2]
 
-                    print(f"Comment {count} of {len(comments)}")
+                    # print(f"Comment {count} of {len(comments)}")
                     count += 1
 
-                    print(f"Text: {text}")
-                    print(f"Author: {author}")
-                    print(f"Post id: {post_id}")
-                    print(f"Thing id: {thing_id}")
-                    print('\n')
+                    # print(f"Text: {text}")
+                    # print(f"Author: {author}")
+                    # print(f"Post id: {post_id}")
+                    # print(f"Thing id: {thing_id}")
+                    # print('\n')
 
                     df_comments = pl.concat([df_comments, pl.DataFrame([{'post_id': post_id, 'text': text,
                                                                          'subreddit': subreddit, 'author': author,
