@@ -7,5 +7,31 @@ services:
     volumes:
       - mongo_data:/data/db
 
+  firefox:
+    image: selenium/node-firefox:4.9.1-20230508
+    shm_size: 2gb
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+
+  selenium-hub:
+    image: selenium/hub:4.9.1-20230508
+    container_name: selenium-hub
+    ports:
+      - "4442:4442"
+      - "4443:4443"
+      - "4444:4444"
+    environment:
+      - GRID_BROWSER_TIMEOUT=30
+
+  scraper:
+    build: .
+    depends_on:
+      - mongodb
+      - selenium-hub
+
 volumes:
   mongo_data:

@@ -1,11 +1,21 @@
 import logging
 import time
+import os
+
 from selenium import webdriver
 from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.common.by import By
 from webdriver_manager.firefox import GeckoDriverManager
 
 logger = logging.getLogger(__name__)
+
+
+def is_running_in_docker():
+    """
+    Checks if the current process is running inside a Docker container
+    :return: True if running inside a Docker container, False otherwise
+    """
+    return os.environ.get('DOCKER_CONTAINER') is not None
 
 
 def get_driver(driver_options):
@@ -15,6 +25,10 @@ def get_driver(driver_options):
     :param driver_options: Firefox webdriver options.
     :return: Firefox webdriver instance.
     """
+    if is_running_in_docker():
+        logger.info("Running in Docker container, using remote webdriver")
+        return webdriver.Remote(command_executor='http://selenium-hub:4444/wd/hub', options=driver_options)
+
     return webdriver.Firefox(service=Service(GeckoDriverManager().install()), options=driver_options)
 
 
