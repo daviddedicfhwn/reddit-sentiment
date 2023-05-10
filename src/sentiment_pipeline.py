@@ -3,13 +3,12 @@ from transformers import AutoTokenizer, AutoConfig
 import numpy as np
 import config
 from scipy.special import softmax
+import re
 
 class SentimentPipeline:
     
-    def __init__(self, model_path="cardiffnlp/twitter-xlm-roberta-base-sentiment", window_size=512, stride=256):
+    def __init__(self, model_path="cardiffnlp/twitter-xlm-roberta-base-sentiment"):
         self.model_path = model_path
-        self.window_size = window_size
-        self.stride = stride
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_path)
         self.config = AutoConfig.from_pretrained(self.model_path)
         self.model = AutoModelForSequenceClassification.from_pretrained(self.model_path)
@@ -25,14 +24,18 @@ class SentimentPipeline:
                 'label': self.config.id2label[ranking[0]], 
                 'score': np.round(float(scores[ranking[0]]), 4) 
                }
-    
+
     def preprocess(self, text, type):
+        patterns = [
+            (r'u\/[\w\d\-_]+', 'user'),
+            (r'r\/[\w\d\-_]+', 'subreddit'),
+            (r'\bhttps?:\/\/[^\s]+\b', 'link')
+        ]
+
         if type == config.POSTS_COLLECTION:
             text.replace("_", " ")
-            
-        new_text = []
-        for t in text.split(" "):
-            t = '@user' if t.startswith('@') and len(t) > 1 else t
-            t = 'http' if t.startswith('http') else t
-            new_text.append(t)
-        return " ".join(new_text)
+
+        for pattern, replacement in patterns:
+            text = re.sub(pattern, replacement, text)
+
+        return text
