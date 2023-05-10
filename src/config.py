@@ -21,3 +21,4 @@ COMMENTS_COLLECTION = "comments"
 # Sentiment Analysis
 SENTIMENT_ANALYSIS = True
 SENTIMENT_FEATURES = [(POSTS_COLLECTION, 'title'), (COMMENTS_COLLECTION, 'text')]
+SENTIMENT_MODEL = "cardiffnlp/twitter-xlm-roberta-base-sentiment"
