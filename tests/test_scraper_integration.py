@@ -5,17 +5,17 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from src.config import DRIVER_OPTIONS, POSTS_COLLECTION, COMMENTS_COLLECTION
-from src.database import connect_to_db, close_db_connection, get_data
+from src.database import MongoDBClient
 from src.scraper import SubredditScraper
 from src.utils import get_driver, handle_cookie_banner
-from tests.test_constants import TEST_SUBREDDIT_ID, TEST_DATABASE_NAME, TEST_SCROLL_TIME
+from tests.test_constants import TEST_SUBREDDIT_ID, TEST_DATABASE_NAME
 
 
 class TestScraperIntegration(unittest.TestCase):
 
     def setUp(self):
-        self.scraper = SubredditScraper(DRIVER_OPTIONS)
-        self.client, self.db = connect_to_db(TEST_DATABASE_NAME)
+        self.client = MongoDBClient(database_name=TEST_DATABASE_NAME)
+        self.scraper = SubredditScraper(DRIVER_OPTIONS, self.client)
 
     def test_subreddit_page_load(self):
         with get_driver(DRIVER_OPTIONS) as driver:
@@ -32,17 +32,18 @@ class TestScraperIntegration(unittest.TestCase):
         self.scraper.scrape_subreddit(TEST_SUBREDDIT_ID, max_posts=1)
 
         # Check if the posts were saved to the database
-        posts = get_data(POSTS_COLLECTION, {"subreddit": TEST_SUBREDDIT_ID})
-        self.assertGreater(len(posts), 0)
+        with self.client:
+            posts = self.client.get_data(POSTS_COLLECTION, {"subreddit": TEST_SUBREDDIT_ID})
+            self.assertGreater(len(posts), 0)
 
-        # Check if the comments were saved to the database
-        comments = get_data(COMMENTS_COLLECTION, {})
-        self.assertGreater(len(comments), 0)
+            # Check if the comments were saved to the database
+            comments = self.client.get_data(COMMENTS_COLLECTION, {})
+            self.assertGreater(len(comments), 0)
 
     def tearDown(self):
         self.scraper = None
-        self.client.drop_database(TEST_DATABASE_NAME)
-        close_db_connection()
+        with self.client:
+            self.client.drop_database(TEST_DATABASE_NAME)
 
 
 if __name__ == "__main__":

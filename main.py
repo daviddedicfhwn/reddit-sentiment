@@ -1,6 +1,7 @@
 import logging
 
 from src.config import MAX_POSTS_PER_SUBREDDIT, SUBREDDIT_LIST, DRIVER_OPTIONS, SENTIMENT_ANALYSIS, SENTIMENT_FEATURES
+from src.database import MongoDBClient
 from src.scraper import SubredditScraper
 from src.sentiment_controller import SentimentController
 
@@ -14,7 +15,8 @@ logger = logging.getLogger(__name__)
 def main():
     logger.debug(f"Subreddit list: {SUBREDDIT_LIST}")
 
-    scraper = SubredditScraper(DRIVER_OPTIONS)
+    db_client = MongoDBClient()
+    scraper = SubredditScraper(DRIVER_OPTIONS, db_client)
 
     for subreddit in SUBREDDIT_LIST:
         logger.info(f"Scraping subreddit: {subreddit}")
