@@ -8,10 +8,12 @@ class MongoDBClient:
     A MongoDB client class that provides methods to interact with the MongoDB database.
     """
 
-    def __init__(self):
+    def __init__(self, database_name=DATABASE_NAME):
         """
         Initialize the connection to the MongoDB database.
         """
+        self.database_name = database_name
+
         self.client = None
         self.db = None
 
@@ -53,14 +55,20 @@ class MongoDBClient:
         col = self.db[collection]
         col.update_one({'_id': doc_id}, {'$set': data}, upsert=False)
 
-    def connect_to_db(self, database_name):
+    def drop_database(self, database_name):
+        """
+        Drop the specified database.
+
+        :param database_name: The name of the database to drop.
+        """
+        self.client.drop_database(database_name)
+
+    def connect_to_db(self):
         """
         Establish a connection to the MongoDB database.
-
-        :param database_name: The name of the database to connect to.
         """
         self.client = MongoClient(MONGODB_URI)
-        self.db = self.client[database_name]
+        self.db = self.client[self.database_name]
 
     def close_db_connection(self):
         """
@@ -72,7 +80,7 @@ class MongoDBClient:
         """
         Return the MongoDBClient object when the MongoDBClient object is used as a context manager.
         """
-        self.connect_to_db(DATABASE_NAME)
+        self.connect_to_db()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):

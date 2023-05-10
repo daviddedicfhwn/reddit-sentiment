@@ -62,6 +62,7 @@ The scraper can be configured by changing the values in the `config.py` file. Th
 ### Sentiment analysis
 - `SENTIMENT_ANALYSIS`: Whether to perform sentiment analysis on the scraped data. Defaults to `True`
 - `SENTIMENT_FEATURES`: The feature to use for sentiment analysis. Consists of the MongoDB collection name and the field name. Defaults to `[(POSTS_COLLECTION, 'title'), (COMMENTS_COLLECTION, 'text')]`
+- `SENTIMENT_MODEL`: The sentiment analysis model to use. Defaults to `cardiffnlp/twitter-xlm-roberta-base-sentiment`
 
 ### Selenium Driver
 The Selenium driver arguments are also defined in the `config.py` file. Per default the driver runs with the following arguments:
@@ -102,9 +103,11 @@ The scraped data is stored in a MongoDB database. The posts are stored in the `p
 
 ## Sentiment analysis
 
-The sentiment analysis is performed using the [cardiffnlp/twitter-xlm-roberta-base-sentiment](https://huggingface.co/cardiffnlp/twitter-xlm-roberta-base-sentiment) model. The model is able to classify text into one of three classes: `positive`, `negative` and `neutral`.
+The sentiment analysis is performed using the [cardiffnlp/twitter-xlm-roberta-base-sentiment](https://huggingface.co/cardiffnlp/twitter-xlm-roberta-base-sentiment) model per default. The model is able to classify text into one of three classes: `positive`, `negative` and `neutral`.
 
 The classes for each post and comment are stored in the `sentiment` field of the respective MongoDB document. 
+
+The model can be changed by changing the `SENTIMENT_MODEL` in the `config.py` file. The model can be any model from the [Hugging Face model hub](https://huggingface.co/models).
 
 ## Tests
 

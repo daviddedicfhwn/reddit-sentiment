@@ -7,15 +7,15 @@ from selenium.webdriver.support.ui import WebDriverWait
 from tqdm import tqdm
 
 from src import config
-from src.database import MongoDBClient
 from src.utils import get_driver, handle_cookie_banner, scroll_to_bottom
 
 logger = logging.getLogger(__name__)
 
 
 class SubredditScraper:
-    def __init__(self, driver_options):
+    def __init__(self, driver_options, db_client):
         self.driver_options = driver_options
+        self.db_client = db_client
 
     def scrape_subreddit(self, subreddit_id, max_posts=None):
         with get_driver(self.driver_options) as driver:
@@ -73,15 +73,16 @@ class SubredditScraper:
             # Extract and save comments
             df_comments = self.extract_comments_data(driver, post_id)
 
-            with MongoDBClient() as db_client:
-                db_client.insert_many_data(config.COMMENTS_COLLECTION, df_comments.to_dicts())
-                logger.info(f"Comments saved for post: {post_id}")
+            if self.db_client:
+                with self.db_client as db_client:
+                    db_client.insert_many_data(config.COMMENTS_COLLECTION, df_comments.to_dicts())
+                    logger.info(f"Comments saved for post: {post_id}")
 
-                # Save post
-                db_client.insert_many_data(config.POSTS_COLLECTION, pl.DataFrame([
-                    {'post_id': post_id, 'author': author, 'subreddit': subreddit, 'title': title,
-                     'permalink': href}]).to_dicts())
-                logger.info(f"Post saved for subreddit: {subreddit}")
+                    # Save post
+                    db_client.insert_many_data(config.POSTS_COLLECTION, pl.DataFrame([
+                        {'post_id': post_id, 'author': author, 'subreddit': subreddit, 'title': title,
+                         'permalink': href}]).to_dicts())
+                    logger.info(f"Post saved for subreddit: {subreddit}")
 
     @staticmethod
     def extract_comments_data(driver, post_id):

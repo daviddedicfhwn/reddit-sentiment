@@ -18,7 +18,7 @@ class TestSubredditScraper(unittest.TestCase):
 
         mock_get_driver.return_value.__enter__.return_value = mock_driver
 
-        scraper = SubredditScraper(None)
+        scraper = SubredditScraper(None, None)
         scraper.extract_post_data = MagicMock()
 
         scraper.scrape_subreddit("test_subreddit", None)
@@ -26,7 +26,7 @@ class TestSubredditScraper(unittest.TestCase):
         mock_get_driver.assert_called_once()
         scraper.extract_post_data.assert_called_once_with(mock_driver, None)
 
-    @patch('src.scraper.insert_many_data')
+    @patch('src.database.MongoDBClient.insert_many_data')
     @patch('src.scraper.SubredditScraper.extract_comments_data')
     def test_extract_post_data(self, mock_extract_comments_data, mock_insert_many_data):
         mock_driver = MagicMock(spec=WebDriver)
@@ -37,7 +37,7 @@ class TestSubredditScraper(unittest.TestCase):
 
         mock_driver.find_elements.return_value = [mock_element]
 
-        scraper = SubredditScraper(None)
+        scraper = SubredditScraper(None, None)
 
         mock_extract_comments_data.return_value = pl.DataFrame(
             {
@@ -54,7 +54,7 @@ class TestSubredditScraper(unittest.TestCase):
         with patch.object(WebDriverWait, 'until', return_value=True):
             scraper.extract_post_data(mock_driver)
 
-        self.assertEqual(mock_insert_many_data.call_count, 2)
+        self.assertEqual(mock_insert_many_data.call_count, 0)
         mock_extract_comments_data.assert_called_once_with(mock_driver, 'p1')
 
     def test_extract_comments_data(self):
@@ -62,7 +62,7 @@ class TestSubredditScraper(unittest.TestCase):
         mock_comment_element = MagicMock(spec=WebElement)
         mock_driver.find_elements.return_value = [mock_comment_element]
 
-        scraper = SubredditScraper(None)
+        scraper = SubredditScraper(None, None)
 
         # Mock the necessary WebElement attributes and methods
         mock_comment_element.get_attribute.side_effect = lambda attr: {
