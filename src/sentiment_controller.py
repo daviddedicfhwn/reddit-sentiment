@@ -1,7 +1,7 @@
 import logging
 
-from sentiment_pipeline import SentimentPipeline
 from src.database import MongoDBClient
+from src.sentiment_pipeline import SentimentPipeline
 
 logger = logging.getLogger(__name__)
 

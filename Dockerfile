@@ -8,7 +8,8 @@ ENV DOCKER_CONTAINER=1
 WORKDIR /app
 
 # Copy the current directory contents into the container at /app
-COPY ./src /app
+COPY ./src /app/src
+COPY ./main.py /app/main.py
 
 # Copy requirements.txt separately to avoid rebuilding the image
 COPY ./requirements.txt /app/requirements.txt
