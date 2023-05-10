@@ -4,9 +4,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-import config
-from database import insert_many_data
-from utils import get_driver, handle_cookie_banner, scroll_to_bottom
+from src import config
+from src.database import insert_many_data
+from src.utils import get_driver, handle_cookie_banner, scroll_to_bottom
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +15,7 @@ class SubredditScraper:
     def __init__(self, driver_options):
         self.driver_options = driver_options
 
-    def scrape_subreddit(self, subreddit_id):
+    def scrape_subreddit(self, subreddit_id, max_posts=None):
         with get_driver(self.driver_options) as driver:
             driver.get(self.get_subreddit_url(subreddit_id))
             WebDriverWait(driver, 10).until(EC.url_matches(r"https://www.reddit.com/r/.*"))
@@ -26,11 +26,14 @@ class SubredditScraper:
             scroll_to_bottom(driver, config.SCROLL_TIME)
             logger.info("Scrolling finished")
 
-            self.extract_post_data(driver)
+            self.extract_post_data(driver, max_posts)
 
-    def extract_post_data(self, driver):
+    def extract_post_data(self, driver, max_posts=None):
         post_elements = driver.find_elements(By.XPATH, "//div[@data-testid='post-container']//a[@data-click-id='body']")
         post_hrefs = [element.get_attribute('href') for element in post_elements]
+
+        if max_posts:
+            post_hrefs = post_hrefs[:max_posts]
 
         count = 1
         for href in post_hrefs:

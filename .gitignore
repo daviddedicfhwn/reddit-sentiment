@@ -5,3 +5,5 @@ geckodriver.log
 .idea/
 scraping.log
 src/__pycache__/
+
+tests/__pycache__/

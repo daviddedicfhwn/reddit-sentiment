@@ -26,7 +26,7 @@ def handle_cookie_banner(driver):
     """
     try:
         # Find the element by XPATH
-        section = driver.find_element(By.XPATH, "//span[contains(., 'Cookies') or contains(., 'Technologien')]")
+        section = driver.find_element(By.XPATH, "//span[contains(., 'Cookies') or contains(., 'cookies') or contains(., 'Technologien')]")
         parent_element = section.find_element(By.XPATH, "./ancestor::section[2]")
         button = parent_element.find_element(By.XPATH,
                                              ".//button[contains(text(), 'Alle akzeptieren') or contains(text(), 'Accept All')]")
