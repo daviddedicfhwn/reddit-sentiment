@@ -40,8 +40,9 @@ def handle_cookie_banner(driver):
     """
     try:
         # Find the element by XPATH
+        # fixme cookie
         section = driver.find_element(By.XPATH,
-                                      "//span[contains(., 'Cookies') or contains(., 'cookies') or contains(., 'Technologien')]")
+                                      "//span[contains(., 'Cookie') or contains(., 'cookies') or contains(., 'Technologien')]")
         parent_element = section.find_element(By.XPATH, "./ancestor::section[2]")
         button = parent_element.find_element(By.XPATH,
                                              ".//button[contains(text(), 'Alle akzeptieren') or contains(text(), 'Accept All')]")
@@ -91,3 +92,4 @@ def handle_google_credential(driver):
     except Exception as e:
         logger.debug("No Google Credential", str(e))
         pass
+
