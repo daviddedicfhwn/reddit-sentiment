@@ -140,12 +140,6 @@ class SubredditScraper:
                     # print(f"Comment {count} of {len(comments)}")
                     count += 1
 
-                    # print(f"Text: {text}")
-                    # print(f"Author: {author}")
-                    # print(f"Post id: {post_id}")
-                    # print(f"Thing id: {thing_id}")
-                    # print('\n')
-
                     df_comments = pl.concat([df_comments, pl.DataFrame([{'post_id': post_id, 'text': text,
                                                                          'subreddit': subreddit, 'author': author,
                                                                          'upvotes': up_votes, 'thing_id': thing_id,
@@ -156,14 +150,6 @@ class SubredditScraper:
 
         return df_comments
 
-    @staticmethod
-    def save_data_to_parquet(df, file_name):
-        df.write_parquet(file_name, compression='snappy')
-
-    @staticmethod
-    def save_data_to_csv(df, file_name):
-        # save polars to csv in current directory
-        df.write_csv(file_name)
 
     @staticmethod
     def get_subreddit_url(subreddit_id):

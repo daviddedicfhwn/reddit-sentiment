@@ -56,7 +56,7 @@ The scraper can be configured by changing the values in the `config.py` file. Th
 
 ### Scraping
 - `SCROLL_TIME`: The time in seconds the script scrolls down on the subreddit page until the extraction of posts and comments begins. The longer the time, the more posts and comments will be extracted. Defaults to `10`
-- `SUBREDDITS`: A list of subreddits to scrape. Defaults to `['popular']`
+- `SUBREDDITS`: A list of subreddits to scrape. Defaults to `['popular']` #todo change to mention fetch_subreddits
 - `MAX_POSTS_PER_SUBREDDIT`: The maximum number of posts to scrape per subreddit. Defaults to `None` (no limit)
 
 ### Sentiment analysis
