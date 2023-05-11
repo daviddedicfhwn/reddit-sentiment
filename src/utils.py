@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import time
@@ -16,6 +17,26 @@ def is_running_in_docker():
     :return: True if running inside a Docker container, False otherwise
     """
     return os.environ.get('DOCKER_CONTAINER') is not None
+
+
+def get_subreddits_from_file(filename):
+    """
+    Gets the list of subreddits from the JSON file if it exists.
+
+    If the file does not exist, None is returned.
+
+    :param filename: The name of the JSON file to load (default is "subreddits.json").
+    :return: The JSON file as a Python dictionary.
+    """
+
+    # filename is a relative path, so we need to get the absolute path
+    if not os.path.isfile(filename):
+        return None
+
+    with open(filename, "r") as file:
+        json_file = json.load(file)
+
+    return json_file
 
 
 def get_driver(driver_options):
@@ -92,4 +113,3 @@ def handle_google_credential(driver):
     except Exception as e:
         logger.debug("No Google Credential", str(e))
         pass
-

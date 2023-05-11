@@ -74,7 +74,8 @@ class MongoDBClient:
         """
         Close the connection to the MongoDB database.
         """
-        self.client.close()
+        if self.client is not None:
+            self.client.close()
 
     def __enter__(self):
         """

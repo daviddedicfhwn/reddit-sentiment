@@ -1,3 +1,13 @@
+"""
+Fetch the display names of popular subreddits and save them to a JSON file.
+
+Usage:
+    python scripts/fetch_subreddits.py
+
+    Add your Reddit API credentials to a .env file in the same directory as this script.
+"""
+
+
 import json
 import os
 
@@ -6,6 +16,7 @@ from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
+
 
 def get_popular_subreddits(limit=100):
     """
@@ -37,21 +48,7 @@ def save_subreddits_to_json(subreddit_list, filename=os.getenv("SUBREDDITS_FILEN
     """
     # Save the list of subreddits to a JSON file
     with open(filename, "w") as file:
-        json.dump(subreddit_list, file)
-
-
-def load_json(filename=os.getenv("SUBREDDITS_FILENAME", "data/subreddits.json")):
-    """
-    Load a JSON file.
-
-    :param filename: The name of the JSON file to load (default is "subreddits.json").
-    :return: The JSON file as a Python dictionary.
-    """
-    # Load the JSON file in data directory
-    with open(filename, "r") as file:
-        json_file = json.load(file)
-
-    return json_file
+        json.dump(subreddit_list, file, indent=4)
 
 
 if __name__ == "__main__":
