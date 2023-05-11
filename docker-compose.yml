@@ -6,6 +6,7 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+    restart: unless-stopped
 
   firefox:
     image: selenium/node-firefox:4.9.1-20230508
@@ -16,6 +17,10 @@ services:
       - SE_EVENT_BUS_HOST=selenium-hub
       - SE_EVENT_BUS_PUBLISH_PORT=4442
       - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+      - START_XVFB=false
+      - SE_NODE_OVERRIDE_MAX_SESSIONS=true
+      - SE_NODE_MAX_SESSIONS=10
+    restart: unless-stopped
 
   selenium-hub:
     image: selenium/hub:4.9.1-20230508
@@ -26,12 +31,17 @@ services:
       - "4444:4444"
     environment:
       - GRID_BROWSER_TIMEOUT=30
+      - SE_NODE_SESSION_TIMEOUT=30
+    restart: unless-stopped
 
   scraper:
     build: .
     depends_on:
       - mongodb
       - selenium-hub
+
+    volumes:
+        - ./data:/app/data # subreddits.json
 
 volumes:
   mongo_data:
