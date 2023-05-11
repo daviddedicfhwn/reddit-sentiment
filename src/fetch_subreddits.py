@@ -1,5 +1,6 @@
 import json
 import os
+
 import praw
 from dotenv import load_dotenv
 
