@@ -31,7 +31,7 @@ class SubredditScraper:
                 logger.info("Scrolling finished")
 
                 logger.info("Extracting post data...")
-                self.extract_post_data(driver, max_posts)
+                self.extract_post_data(driver, subreddit_id, max_posts)
                 logger.info(f"Post data extraction complete for subreddit: {subreddit_id}")
 
         except (TimeoutException, WebDriverException) as e:
@@ -39,7 +39,7 @@ class SubredditScraper:
         except Exception as e:
             logger.error(f"Unknown error during subreddit scraping: {str(e)}")
 
-    def extract_post_data(self, driver, max_posts=None):
+    def extract_post_data(self, driver, subreddit_id, max_posts=None):
         try:
             post_elements = driver.find_elements(By.XPATH,
                                                  "//div[@data-testid='post-container']//a[@data-click-id='body']")
@@ -53,6 +53,8 @@ class SubredditScraper:
 
             for i, href in enumerate(post_hrefs):
                 self.process_post(driver, href)
+                if (i+1) % 10 == 0:
+                    logger.info(f"subreddit: {subreddit_id}; processed {i+1}/{len(post_hrefs)} posts")
 
         except (TimeoutException, NoSuchElementException) as e:
             logger.error(f"NoSuchElementException during post data extraction: {str(e)}")
@@ -98,10 +100,12 @@ class SubredditScraper:
                 EC.presence_of_all_elements_located((By.XPATH, "//shreddit-comment[not(@is-comment-deleted)]")))
         except (TimeoutException, NoSuchElementException) as e:
             logger.error(f"WebDriver error while getting comments: {str(e)}")
+            logger.warning(f"Comments not found for post: {post_id}. Continue with next.")
             return None
 
         except Exception as e:
             logger.error(f"Unknown error while getting comments: {str(e)}")
+            logger.warning(f"Error for post: {post_id}. Continue with next.")
             return None
 
         comments_data = self.process_comments(comments, post_id)
@@ -136,7 +140,7 @@ class SubredditScraper:
                 text = comment.find_element(By.XPATH, ".//div[@id='-post-rtjson-content']/p").text
 
                 if text is None:
-                    logger.warning(f"Skipping comment {i} of {len(comments)} as it has no text, post: {post_id}")
+                    logger.warning(f"Skipping comment {i+1} of {len(comments)} as it has no text, post: {post_id}")
                     continue
 
                 df_comments = pl.concat([df_comments, SubredditScraper.extract_comment_data(comment, post_id, text)])
@@ -146,7 +150,7 @@ class SubredditScraper:
                 continue
             except Exception as e:
                 logger.error(f"Unknown error while processing comment: {str(e)}")
-                logger.warning(f"Skipping comment {i} of {len(comments)}, post: {post_id}")
+                logger.warning(f"Skipping comment {i+1} of {len(comments)}, post: {post_id}")
                 continue
 
         return df_comments
