@@ -97,7 +97,7 @@ class SubredditScraper:
             scroll_to_bottom(driver, 1)  # Scroll to bottom to load more comments per post
 
             comments = WebDriverWait(driver, 5).until(
-                EC.presence_of_all_elements_located((By.TAG_NAME, "shreddit-comment")))
+                EC.presence_of_all_elements_located((By.XPATH, "//shreddit-comment[not(@is-comment-deleted)]")))
         except (TimeoutException, NoSuchElementException) as e:
             logger.error(f"WebDriver error while getting comments: {str(e)}")
             return None
