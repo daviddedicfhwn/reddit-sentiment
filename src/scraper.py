@@ -64,11 +64,9 @@ class SubredditScraper:
             driver.get(href)
         except (TimeoutException, WebDriverException) as e:
             logger.error(f"WebDriver error while getting href: {href}, {str(e)}. Continue with next.")
-            driver.close()
             return
         except Exception as e:
             logger.error(f"Unknown error while getting href: {href}, {str(e)}. Continue with next.")
-            driver.close()
             return
 
         split_url = href.split('/')

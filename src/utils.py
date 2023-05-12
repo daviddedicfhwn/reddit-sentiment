@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import sys
 import time
 
 from selenium import webdriver
@@ -55,18 +56,13 @@ def get_driver(driver_options):
 
 def handle_cookie_banner(driver):
     """
-    Handles the cookie banner on the Reddit page by clicking the "Accept All" button.
+    Handles the cookie banner on the Reddit page by clicking the "Accept all" button.
 
     :param driver: Webdriver instance.
     """
     try:
         # Find the element by XPATH
-        # fixme cookie
-        section = driver.find_element(By.XPATH,
-                                      "//span[contains(., 'Cookie') or contains(., 'cookies') or contains(., 'Technologien')]")
-        parent_element = section.find_element(By.XPATH, "./ancestor::section[2]")
-        button = parent_element.find_element(By.XPATH,
-                                             ".//button[contains(text(), 'Alle akzeptieren') or contains(text(), 'Accept All')]")
+        button = driver.find_element(By.XPATH, ".//button[contains(text(), 'Accept all')]")
         button.click()
 
         logger.debug("Cookie banner handled")

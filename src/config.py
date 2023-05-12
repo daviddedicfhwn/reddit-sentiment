@@ -13,6 +13,7 @@ def get_driver_options():
     options.add_argument('-headless')
     options.add_argument('-no-sandbox')
     options.set_preference("profile.managed_default_content_settings.images", 2)
+    options.set_preference("intl.accept_languages", "en-us")
     return options
 
 
