@@ -49,7 +49,7 @@ class SentimentPipeline:
             'score': np.round(float(scores[ranking[0]]), 4)
         }
 
-    def preprocess(text, type):
+    def preprocess(self, text, type):
         """
         Preprocesses/Anonymizes the input text. Removes URLs, subreddit names and usernames.
 
