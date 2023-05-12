@@ -140,7 +140,7 @@ class SubredditScraper:
         comments_data = self.process_comments(comments, post_id)
 
         # Remove duplicated comments based on text
-        comments_data.unique(subset=["text"])
+        comments_data = comments_data.unique(subset=["text"])
         return comments_data
 
     @staticmethod
