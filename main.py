@@ -32,6 +32,9 @@ def scrape_subreddits():
     logger.info("Scraper starting")
 
     db_client = MongoDBClient()
+    with db_client as db_client:
+        db_client.db.list_collection_names()
+        logger.info(f"DB connection established")
 
     subreddit_list = get_subreddits_from_file(SUBREDDIT_FILE)
     if not subreddit_list:
