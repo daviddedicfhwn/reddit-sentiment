@@ -55,13 +55,15 @@ class SubredditScraper:
         """
         try:
             post_elements = driver.find_elements(By.XPATH,
-                                                 "//div[@data-testid='post-container']//a[@data-click-id='body']")
+                                                 "//div[@data-testid='post-container' and not(descendant::span[contains(text(), 'nsfw')])]//a[@data-click-id='body']")
+
             post_hrefs = [element.get_attribute('href') for element in post_elements]
 
             logger.info(f"Found {len(post_hrefs)} posts")
 
             if max_posts:
                 logger.info(f"Limiting posts to {max_posts}")
+                # todo risky, should be tested if it works when there are fewer posts than max_posts
                 post_hrefs = post_hrefs[:max_posts]
 
             for i, href in enumerate(post_hrefs):

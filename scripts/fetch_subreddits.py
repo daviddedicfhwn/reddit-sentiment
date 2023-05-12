@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def get_popular_subreddits(limit=100):
+def get_popular_subreddits(limit=50):
     """
     Get the display names of popular subreddits.
 
@@ -30,16 +30,16 @@ def get_popular_subreddits(limit=100):
                          client_secret=os.getenv("REDDIT_CLIENT_SECRET"),
                          user_agent=os.getenv("REDDIT_USER_AGENT"))
 
+
     # Get popular subreddits
     subreddits = reddit.subreddits.popular(limit=limit, params={"t": "all"})
-
     # Store the subreddits' display_name in a list
     subreddit_list = [subreddit.display_name for subreddit in subreddits]
 
     return subreddit_list
 
 
-def save_subreddits_to_json(subreddit_list, filename=os.getenv("SUBREDDITS_FILENAME", "subreddits.json")):
+def save_subreddits_to_json(subreddit_list, filename=os.getenv("SUBREDDITS_FILENAME", "../data/subreddits.json")):
     """
     Save a list of subreddit display names to a JSON file.
 
