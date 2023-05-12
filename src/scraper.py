@@ -23,7 +23,6 @@ class SubredditScraper:
         Scrapes a subreddit and saves the data to the database.
         :param subreddit_id: subreddit to scrape
         :param max_posts: maximum number of posts to scrape
-        :return: #todo should return something?
         """
         try:
             with get_driver(self.driver_options) as driver:
@@ -51,7 +50,6 @@ class SubredditScraper:
         :param driver: Selenium webdriver instance.
         :param subreddit_id: Subreddit ID.
         :param max_posts: maximum number of posts to extract.
-        :return:  #TODO should return something?
         """
         try:
             post_elements = driver.find_elements(By.XPATH,
@@ -63,13 +61,12 @@ class SubredditScraper:
 
             if max_posts:
                 logger.info(f"Limiting posts to {max_posts}")
-                # todo risky, should be tested if it works when there are fewer posts than max_posts
                 post_hrefs = post_hrefs[:max_posts]
 
             for i, href in enumerate(post_hrefs):
                 self.process_post(driver, href)
-                if (i+1) % 10 == 0:
-                    logger.info(f"subreddit: {subreddit_id}; processed {i+1}/{len(post_hrefs)} posts")
+                if (i + 1) % 10 == 0:
+                    logger.info(f"subreddit: {subreddit_id}; processed {i + 1}/{len(post_hrefs)} posts")
 
         except (TimeoutException, NoSuchElementException) as e:
             logger.error(f"NoSuchElementException during post data extraction: {str(e)}")
@@ -81,7 +78,6 @@ class SubredditScraper:
         Processes a single post by extracting the post data and the comments data.
         :param driver: Selenium webdriver instance.
         :param href: link to the post.
-        :return: #TODO should probably return something
         """
         try:
             driver.get(href)
@@ -126,7 +122,8 @@ class SubredditScraper:
             scroll_to_bottom(driver, 1)  # Scroll to bottom to load more comments per post
 
             comments = WebDriverWait(driver, 5).until(
-                EC.presence_of_all_elements_located((By.XPATH, "//shreddit-comment[not(@is-comment-deleted) and not(@is-author-deleted)]")))
+                EC.presence_of_all_elements_located(
+                    (By.XPATH, "//shreddit-comment[not(@is-comment-deleted) and not(@is-author-deleted)]")))
         except (TimeoutException, NoSuchElementException) as e:
             logger.error(f"WebDriver error while getting comments: {str(e)}")
             logger.warning(f"Comments not found for post: {post_id}. Continue with next.")
@@ -167,7 +164,7 @@ class SubredditScraper:
         Process comments and return a DataFrame with the data
         :param comments: Comments to process
         :param post_id: post id (relevant for logging)
-        :return:
+        :return: DataFrame with comments data
         """
         df_comments = pl.DataFrame(
             schema={'post_id': pl.Utf8, 'text': pl.Utf8, 'subreddit': pl.Utf8, 'author': pl.Utf8, 'upvotes': pl.Int64,
@@ -180,7 +177,7 @@ class SubredditScraper:
                 text = comment.find_element(By.XPATH, ".//div[@id='-post-rtjson-content']/p").text
 
                 if text is None:
-                    logger.warning(f"Skipping comment {i+1} of {len(comments)} as it has no text, post: {post_id}")
+                    logger.warning(f"Skipping comment {i + 1} of {len(comments)} as it has no text, post: {post_id}")
                     continue
 
                 df_comments = pl.concat([df_comments, SubredditScraper.extract_comment_data(comment, post_id, text)])
@@ -190,7 +187,7 @@ class SubredditScraper:
                 continue
             except Exception as e:
                 logger.error(f"Unknown error while processing comment: {str(e)}")
-                logger.warning(f"Skipping comment {i+1} of {len(comments)}, post: {post_id}")
+                logger.warning(f"Skipping comment {i + 1} of {len(comments)}, post: {post_id}")
                 continue
 
         return df_comments
@@ -202,7 +199,7 @@ class SubredditScraper:
         :param comment: Comment element
         :param post_id: post id
         :param text: text of the comment
-        :return:
+        :return: DataFrame with comment data
         """
         try:
             author = comment.get_attribute("author")

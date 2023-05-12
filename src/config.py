@@ -24,7 +24,6 @@ DRIVER_OPTIONS = get_driver_options()
 SCROLL_TIME = 2  # see README.md for more information
 
 SUBREDDIT_LIST = ['aww']
-# todo idk if this is correct but removing it breaks the code
 SUBREDDIT_FILE = "./data/subreddits.json"
 
 MAX_POSTS_PER_SUBREDDIT = None  # None for no limit

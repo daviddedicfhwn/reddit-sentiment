@@ -7,7 +7,6 @@ Usage:
     Add your Reddit API credentials to a .env file in the same directory as this script.
 """
 
-
 import json
 import os
 
@@ -29,7 +28,6 @@ def get_popular_subreddits(limit=50):
     reddit = praw.Reddit(client_id=os.getenv("REDDIT_CLIENT_ID"),
                          client_secret=os.getenv("REDDIT_CLIENT_SECRET"),
                          user_agent=os.getenv("REDDIT_USER_AGENT"))
-
 
     # Get popular subreddits
     subreddits = reddit.subreddits.popular(limit=limit, params={"t": "all"})
