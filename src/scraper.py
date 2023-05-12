@@ -19,6 +19,12 @@ class SubredditScraper:
         self.db_client = db_client
 
     def scrape_subreddit(self, subreddit_id, max_posts=None):
+        """
+        Scrapes a subreddit and saves the data to the database.
+        :param subreddit_id: subreddit to scrape
+        :param max_posts: maximum number of posts to scrape
+        :return: #todo should return something?
+        """
         try:
             with get_driver(self.driver_options) as driver:
                 driver.get(self.get_subreddit_url(subreddit_id))
@@ -40,6 +46,13 @@ class SubredditScraper:
             logger.error(f"Unknown error during subreddit scraping: {str(e)}")
 
     def extract_post_data(self, driver, subreddit_id, max_posts=None):
+        """
+        Extracts post data from the subreddit page.
+        :param driver: Selenium webdriver instance.
+        :param subreddit_id: Subreddit ID.
+        :param max_posts: maximum number of posts to extract.
+        :return:  #TODO should return something?
+        """
         try:
             post_elements = driver.find_elements(By.XPATH,
                                                  "//div[@data-testid='post-container']//a[@data-click-id='body']")
@@ -61,7 +74,13 @@ class SubredditScraper:
         except Exception as e:
             logger.error(f"Unknown error during post data extraction: {str(e)}")
 
-    def process_post(self, driver, href, ):
+    def process_post(self, driver, href):
+        """
+        Processes a single post by extracting the post data and the comments data.
+        :param driver: Selenium webdriver instance.
+        :param href: link to the post.
+        :return: #TODO should probably return something
+        """
         try:
             driver.get(href)
         except (TimeoutException, WebDriverException) as e:
@@ -93,6 +112,12 @@ class SubredditScraper:
                 logger.debug(f"Post saved for subreddit: {subreddit}")
 
     def extract_comments_data(self, driver, post_id):
+        """
+        Extract comments data from post
+        :param driver: Driver
+        :param post_id: post id
+        :return: comments data or None if not found
+        """
         try:
             scroll_to_bottom(driver, 1)  # Scroll to bottom to load more comments per post
 
@@ -116,6 +141,11 @@ class SubredditScraper:
 
     @staticmethod
     def extract_author(driver):
+        """
+        Extract author from post
+        :param driver: driver
+        :return: author or empty string if not found
+        """
         try:
             WebDriverWait(driver, 10).until(
                 EC.presence_of_element_located((By.XPATH, "//a[contains(@class, 'author-name')]")))
@@ -129,6 +159,12 @@ class SubredditScraper:
 
     @staticmethod
     def process_comments(comments, post_id):
+        """
+        Process comments and return a DataFrame with the data
+        :param comments: Comments to process
+        :param post_id: post id (relevant for logging)
+        :return:
+        """
         df_comments = pl.DataFrame(
             schema={'post_id': pl.Utf8, 'text': pl.Utf8, 'subreddit': pl.Utf8, 'author': pl.Utf8, 'upvotes': pl.Int64,
                     'thing_id': pl.Utf8, 'parent_id': pl.Utf8})
@@ -157,6 +193,13 @@ class SubredditScraper:
 
     @staticmethod
     def extract_comment_data(comment, post_id, text):
+        """
+        Extracts comment data from a comment element
+        :param comment: Comment element
+        :param post_id: post id
+        :param text: text of the comment
+        :return:
+        """
         try:
             author = comment.get_attribute("author")
             thing_id = comment.get_attribute("thingid")
