@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import time
@@ -18,6 +19,26 @@ def is_running_in_docker():
     return os.environ.get('DOCKER_CONTAINER') is not None
 
 
+def get_subreddits_from_file(filename):
+    """
+    Gets the list of subreddits from the JSON file if it exists.
+
+    If the file does not exist, None is returned.
+
+    :param filename: The name of the JSON file to load (default is "subreddits.json").
+    :return: The JSON file as a Python dictionary.
+    """
+
+    # filename is a relative path, so we need to get the absolute path
+    if not os.path.isfile(filename):
+        return None
+
+    with open(filename, "r") as file:
+        json_file = json.load(file)
+
+    return json_file
+
+
 def get_driver(driver_options):
     """
     Returns an instance of the Firefox webdriver with the given options.
@@ -34,18 +55,13 @@ def get_driver(driver_options):
 
 def handle_cookie_banner(driver):
     """
-    Handles the cookie banner on the Reddit page by clicking the "Accept All" button.
+    Handles the cookie banner on the Reddit page by clicking the "Accept all" button.
 
     :param driver: Webdriver instance.
     """
     try:
         # Find the element by XPATH
-        # fixme cookie
-        section = driver.find_element(By.XPATH,
-                                      "//span[contains(., 'Cookie') or contains(., 'cookies') or contains(., 'Technologien')]")
-        parent_element = section.find_element(By.XPATH, "./ancestor::section[2]")
-        button = parent_element.find_element(By.XPATH,
-                                             ".//button[contains(text(), 'Alle akzeptieren') or contains(text(), 'Accept All')]")
+        button = driver.find_element(By.XPATH, ".//button[contains(text(), 'Accept all')]")
         button.click()
 
         logger.debug("Cookie banner handled")
@@ -92,4 +108,3 @@ def handle_google_credential(driver):
     except Exception as e:
         logger.debug("No Google Credential", str(e))
         pass
-
