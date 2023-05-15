@@ -1,6 +1,4 @@
-# Reddit scraper and sentiment analysis
-
-
+# Reddit Sentiment - Web Data Acquisition Project
 
 This project is all about [reddit.com](https://reddit.com). Designed to gather data from popular subreddits and perform sentiment analysis on the collected data. The goal is to gain insights into the opinions and emotions of Reddit users and subreddits.
 
@@ -36,6 +34,9 @@ python main.py
 
 ### Running in Docker
 
+> **Note:**
+> Running the project in Docker is not the recommended way of running the project because of the resource intensive nature of the project and limited testing.  
+
 If you have Docker installed, you can run the project in a Docker container. To do so, you will need to build the Docker image. This can be done by running the following command in the root directory of the project:
 
 ```bash
@@ -49,20 +50,24 @@ This will build the Docker image and start the MongoDB and scraper containers.
 The scraper can be configured by changing the values in the `config.py` file. The following values can be changed:
 
 ### Database
-- `MONGO_URI`: The URI of the MongoDB instance to use. Defaults to `mongodb://localhost:27017/`
-- `MONGO_DB`: The name of the MongoDB database to use. Defaults to `reddit`
+- `MONGODB_URI`: The URI of the MongoDB instance to use. Defaults to `mongodb://localhost:27017/`
+- `DATABASE_NAME`: The name of the MongoDB database to use. Defaults to `reddit_sentiment`
 - `POSTS_COLLECTION`: The name of the MongoDB collection to store the posts in. Defaults to `posts`
 - `COMMENTS_COLLECTION`: The name of the MongoDB collection to store the comments in. Defaults to `comments`
 
 ### Scraping
-- `SCROLL_TIME`: The time in seconds the script scrolls down on the subreddit page until the extraction of posts and comments begins. The longer the time, the more posts and comments will be extracted. Defaults to `10`
-- `SUBREDDITS`: A list of subreddits to scrape. Defaults to `['popular']` #todo change to mention fetch_subreddits
+- `SCROLL_TIME`: The time in seconds the script scrolls down on the subreddit page until the extraction of posts and comments begins. The longer the time, the more posts and comments will be extracted. Defaults to `2`
+- `SUBREDDIT_LIST`: A list of subreddits to scrape. Defaults to `['aww']`
+- `SUBREDDIT_FILE`: The file path of a JSON file containing a list of subreddits to scrape. Defaults to `"./data/subreddits.json"`
 - `MAX_POSTS_PER_SUBREDDIT`: The maximum number of posts to scrape per subreddit. Defaults to `None` (no limit)
 
 ### Sentiment analysis
 - `SENTIMENT_ANALYSIS`: Whether to perform sentiment analysis on the scraped data. Defaults to `True`
 - `SENTIMENT_FEATURES`: The feature to use for sentiment analysis. Consists of the MongoDB collection name and the field name. Defaults to `[(POSTS_COLLECTION, 'title'), (COMMENTS_COLLECTION, 'text')]`
-- `SENTIMENT_MODEL`: The sentiment analysis model to use. Defaults to `cardiffnlp/twitter-xlm-roberta-base-sentiment`
+- `SENTIMENT_MODEL`: The sentiment analysis model to use. Defaults to `"cardiffnlp/twitter-xlm-roberta-base-sentiment"`
+
+### Selenium Driver
+- `DRIVER_OPTIONS`: The options for the Firefox webdriver. Defaults to the options returned by the `get_driver_options()` function in the `config.py` file.
 
 ### Selenium Driver
 The Selenium driver arguments are also defined in the `config.py` file. Per default the driver runs with the following arguments:
@@ -109,6 +114,10 @@ The classes for each post and comment are stored in the `sentiment` field of the
 
 The model can be changed by changing the `SENTIMENT_MODEL` in the `config.py` file. The model can be any model from the [Hugging Face model hub](https://huggingface.co/models).
 
+The analysis can be disabled by setting the `SENTIMENT_ANALYSIS` in the `config.py` file to `False`.
+
+A notebook demonstrating the sentiment analysis can be found in the `notebooks` directory.
+
 ## Tests
 
 The project includes a number of unit and integration tests. These tests can be run by running the following command in the root directory of the project:
@@ -116,5 +125,7 @@ The project includes a number of unit and integration tests. These tests can be 
 ```bash
 python -m unittest discover
 ```
+
+Make sure a MongoDB instance is running before running the tests as the integration tests require a running MongoDB instance.
 
 It is recommended to run the tests within PyCharm or any IDE providing a graphical test runner.
