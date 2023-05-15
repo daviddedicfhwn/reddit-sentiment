@@ -12,7 +12,15 @@ from tests.test_constants import TEST_SUBREDDIT_ID, TEST_DATABASE_NAME
 
 
 class TestScraperIntegration(unittest.TestCase):
+    """
+    Unit Test class for the SubredditScraper integration.
 
+    Methods:
+        setUp: Initializes a MongoDBClient and a SubredditScraper with the necessary configurations.
+        test_subreddit_page_load: Tests the loading of a subreddit page and verifies its title.
+        test_scraping: Tests the scraping of a subreddit, and checks if posts and comments were saved to the database.
+        tearDown: Cleans up the SubredditScraper and MongoDBClient, and drops the test database.
+    """
     def setUp(self):
         self.client = MongoDBClient(database_name=TEST_DATABASE_NAME)
         self.scraper = SubredditScraper(DRIVER_OPTIONS, self.client)

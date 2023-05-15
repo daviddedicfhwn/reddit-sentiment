@@ -5,7 +5,16 @@ from tests.test_constants import TEST_DATABASE_NAME, TEST_COLLECTION_NAME
 
 
 class TestDatabaseIntegration(unittest.TestCase):
+    """
+    Unit Test class for the MongoDBClient integration.
 
+    Methods:
+        setUp: Initializes a MongoDBClient with the necessary configurations.
+        tearDown: Cleans up the MongoDBClient and drops the test database.
+        test_insert_many_data: Tests the insertion of multiple data items into a collection and validates the operation.
+        test_get_data: Tests the retrieval of data from a collection and validates the operation.
+        test_update_data_by_id: Tests the update operation for a specific document by its id and validates the operation.
+    """
     def setUp(self):
         self.client = MongoDBClient(database_name=TEST_DATABASE_NAME)
 

@@ -7,7 +7,15 @@ from src.utils import get_driver, handle_cookie_banner, scroll_to_bottom, handle
 
 
 class TestUtils(unittest.TestCase):
+    """
+    Unit Test class for the utility functions.
 
+    Methods:
+        test_get_driver: Test the get_driver function.
+        test_handle_cookie_banner: Test the handle_cookie_banner function.
+        test_scroll_to_bottom: Test the scroll_to_bottom function.
+        test_handle_google_credential: Test the handle_google_credential function.
+    """
     def test_get_driver(self):
         with patch('src.utils.webdriver.Firefox') as mock_firefox:
             mock_firefox.return_value = MagicMock(spec=WebDriver)
